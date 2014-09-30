@@ -22,15 +22,9 @@ double squareroot(double x)
  double xhi = x;
  double xlo = 0;
 
- /* The loopStopper variable and following if statement take care of values
-    1 > value > 0. */
+ /* loopStopper keeps program from endless loop */
  double loopStopper = 1;
- if (x < 1)
- {
-  loopStopper = x;
-  xhi = 1;
- }
- double guess = (x + loopStopper)/2;
+ double guess = (xhi + loopStopper) / 2;
 
 /* We stop when guess*guess-x is very small */
 

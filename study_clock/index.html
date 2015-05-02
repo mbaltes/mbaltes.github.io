@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>mcb.me - study clock</title>
+  <meta name="description" content="The HTML5 Herald">
+  <meta name="author" content="SitePoint">
+
+  <link rel="stylesheet" href="css/styles.css?v=1.0">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+    <div id="header">
+        <h1>STUDY CLOCK</h1>
+    </div>
+    <div id="message">
+        <h3 id="h3"></h3>
+    </div>
+    <div id="timer">
+        <p>
+            <script>
+            var audio = new Audio('end.mp3');
+            var timer = prompt("Enter time: ");
+            //var timer = 10;
+            var run_timer = function() {
+                if (timer == 0) {
+                    audio.play();
+                    clearInterval(my_timer);
+                    document.getElementById("h3").innerHTML = "Minutes Remaining:";
+                    document.getElementById("timer").innerHTML = timer;
+                    window.alert("END");
+                }
+                document.getElementById("h3").innerHTML = "Minutes Remaining:";
+                document.getElementById("timer").innerHTML = timer;
+                timer = --timer;
+            }
+            run_timer();
+            var my_timer = setInterval(run_timer, 2000);
+            </script>
+        </p>
+
+    </div>
+    <script src="js/scripts.js"></script>
+</body>
+</html>

@@ -26,6 +26,11 @@
         <p>
             <script>
             var audio = new Audio('end.mp3');
+            // create loop
+            audio.addEventListener('ended', function() {
+              this.currentTime = 0;
+              this.play();
+            }, false);
             var timer = prompt("Enter time: ");
             //var timer = 10;
             var run_timer = function() {
@@ -34,14 +39,14 @@
                     clearInterval(my_timer);
                     document.getElementById("h3").innerHTML = "Minutes Remaining:";
                     document.getElementById("timer").innerHTML = timer;
-                    window.alert("END");
+                    //window.alert("END");
                 }
                 document.getElementById("h3").innerHTML = "Minutes Remaining:";
                 document.getElementById("timer").innerHTML = timer;
                 timer = --timer;
             }
             run_timer();
-            var my_timer = setInterval(run_timer, 60000);
+            var my_timer = setInterval(run_timer, 1000);
             </script>
         </p>
 

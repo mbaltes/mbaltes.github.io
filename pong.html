@@ -1,0 +1,249 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Pong</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+            background-color: dimgrey;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+let config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },
+            debug: false
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    },
+    audio: {
+        disableWebAudio: true,
+    }
+};
+
+const AIDIFFICULTY = 250;
+const DELAY = 2000;
+const MAX_ALLOWED_SPEED = 900;
+const PADDLEHEIGHT = 50;
+const MAXBOUNCEANGLE = 2 * Math.PI/12;
+
+let ballSpeed = 400;
+let p1Score = 0;
+let p2Score = 0;
+let balls;
+let cursors;
+let playerOne;
+let playerTwo;
+let ball;
+let playerOneScore;
+let playerTwoScore;
+let winningText;
+
+let game = new Phaser.Game(config);
+
+function preload()
+{
+    // Load assets
+    this.load.image('bar', 'assets/pong-small.png');
+    this.load.image('sky', 'assets/pong-bg.png');
+    this.load.image('ball', 'assets/ball.png');
+    this.load.image('net', 'assets/net5.png');
+    this.load.audio('blip-paddle', 'assets/blip-paddle.wav', {instances: 1});
+    this.load.audio('blip-wall', 'assets/blip-wall.wav', {instances: 1});
+    this.load.audio('blip-score', 'assets/blip-score.wav', {instances: 1});
+}
+
+function create()
+{
+    // Background image
+    this.add.image(400, 300, 'sky');
+
+    // Create paddles
+    playerOne = this.physics.add.image(50, 300, 'bar');
+    playerOne.setCollideWorldBounds(true);
+    playerOne.setImmovable(true);
+
+    playerTwo = this.physics.add.image(750, 300, 'bar');
+    playerTwo.setCollideWorldBounds(true);
+    playerTwo.setImmovable(true);
+
+    // Create ball
+    balls = this.physics.add.group();
+    ball = balls.create(400, Phaser.Math.Between(0, 600), 'ball');
+    ball.setBounce(1);
+    ball.setCollideWorldBounds(true);
+    ball.setVelocity(-ballSpeed, Phaser.Math.Between(0, 400));
+    ball.allowGravity = false;
+
+    // Keyboard inputs
+    cursors = this.input.keyboard.createCursorKeys();
+
+    // Create the net
+    this.add.image(400, 300, 'net');
+
+    // Create sounds
+    this.sound.add('blip-paddle');
+    this.sound.add('blip-wall');
+    this.sound.add('blip-score');
+
+    // Create score view
+    playerOneScore = this.add.text(200, 50, '0', { 
+        fontSize: '64px', 
+        fill: '#f9f9fa' 
+    });
+    playerTwoScore = this.add.text(600, 50, '0', { 
+        fontSize: '64px', 
+        fill: '#f9f9fa' 
+    });
+    winningText    = this.add.text(200, 400, '', { 
+        fontSize: '64px', 
+        fill: '#f9f9fa' 
+    });
+
+    // Create collision detection
+    this.physics.add.collider(ball, playerOne, hitplayerOne, null, this);
+    this.physics.add.collider(ball, playerTwo, hitplayerTwo, null, this);
+}
+
+function update()
+{
+    // Game over condition
+    if (p1Score === 5 || p2Score === 5) {
+        gameOverText();
+        this.physics.pause();
+        ball.setTint(0x000000);
+        ball.x = 400;
+        ball.y = 300;
+        return;
+    }
+
+    // Setting wall bounce sound on top/bottom collision
+    if (ball.body.position.y === 0 || ball.body.position.y === 590) {
+        this.sound.play('blip-wall');
+    }
+
+    // AI opponent movement
+    if (ball.body.position.y < playerTwo.body.position.y) {
+        playerTwo.setVelocityY(-AIDIFFICULTY);
+    } else if (ball.body.position.y > playerTwo.body.position.y) {
+        playerTwo.setVelocityY(AIDIFFICULTY);
+    } else {
+        playerTwo.setVelocity(0);
+    }
+
+    // Code for AI to play itself
+    // if (ball.body.position.y < playerOne.body.position.y) {
+    //     playerOne.setVelocityY(-400);
+    // } else if (ball.body.position.y > playerOne.body.position.y) {
+    //     playerOne.setVelocityY(400);
+    // } else {
+    //     playerOne.setVelocity(0);
+    // }
+
+    // Conditions to score points
+    if (ball.body.position.x === 0) {
+        this.sound.play('blip-score');
+        ball.x = 10;
+        ball.y = 300;
+        ball.setTint(0x000000);
+        ball.setVelocity(0, 0);
+        playerTwoScore.setText('' + (++p2Score));
+        setTimeout(() => { // The ball will be served after a brief DELAY
+            ball.setTint(0xffffff);
+            ball.x = 400;
+            ball.y = Phaser.Math.Between(0, 600);
+            ballSpeed = 400;
+            ball.setVelocity(-ballSpeed, Phaser.Math.Between(0, 400));
+        }, DELAY);
+    }
+
+    if (ball.body.position.x === 790) {
+        this.sound.play('blip-score');
+        ball.x = 780;
+        ball.y = 300;
+        ball.setTint(0x000000);
+        ball.setVelocity(0, 0);
+        playerOneScore.setText('' + (++p1Score));
+        setTimeout(() => {
+            ball.setTint(0xffffff);
+            ball.x = 400;
+            ball.y = Phaser.Math.Between(0, 600);
+            ballSpeed = 400;
+            ball.setVelocity(ballSpeed, Phaser.Math.Between(0, 400));
+        }, DELAY);
+    }
+
+    // Human player input controls
+    if (cursors.up.isDown) {
+        playerOne.setVelocityY(-600);
+    } else if (cursors.down.isDown) {
+        playerOne.setVelocityY(600);
+    } else {
+        playerOne.setVelocityY(0);
+    }
+}
+
+// Physics when ball collides with paddle
+function hitplayerOne(ball, playerOne) {
+    this.sound.play('blip-paddle');
+    ballSpeed = (ballSpeed + 75) > MAX_ALLOWED_SPEED ? 
+        MAX_ALLOWED_SPEED : ballSpeed + 75;
+
+    let paddle1Y = playerOne.body.position.y;
+    let intersectY = ball.body.position.y;
+
+    let relativeIntersectY = (paddle1Y+(PADDLEHEIGHT/2)) - intersectY;
+    let normalizedRelativeIntersectionY = (relativeIntersectY/(PADDLEHEIGHT/2));
+    let bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
+
+    let ballVx = ballSpeed*Math.cos(bounceAngle);
+    let ballVy = ballSpeed*-Math.sin(bounceAngle);
+
+    ball.setVelocity(ballVx, ballVy);
+}
+
+function hitplayerTwo(ball, playerTwo) {
+    this.sound.play('blip-paddle');
+    ballSpeed = (ballSpeed + 75) > MAX_ALLOWED_SPEED ? 
+        MAX_ALLOWED_SPEED : ballSpeed + 75;
+
+    let paddle2Y = playerTwo.body.position.y;
+    let intersectY = ball.body.position.y;
+
+    let relativeIntersectY = (paddle2Y+(PADDLEHEIGHT/2)) - intersectY;
+    let normalizedRelativeIntersectionY = (relativeIntersectY/(PADDLEHEIGHT/2));
+    let bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
+
+    let ballVx = -ballSpeed*Math.cos(bounceAngle);
+    let ballVy = ballSpeed*-Math.sin(bounceAngle);
+
+    ball.setVelocity(ballVx, ballVy);
+}
+
+function gameOverText() {
+    if (p1Score === 5) {
+        winningText.setText('You    win!');
+    } else {
+        winningText.setText('You    lose');
+    }
+}
+
+</script>
+
+</body>
+</html>
